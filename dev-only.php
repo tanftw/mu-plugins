@@ -29,7 +29,30 @@ function clv( $object ) {
 }
 
 // Always login REST API as admin
-add_filter( 'determine_current_user', fn() => 1 );
+add_filter( 'determine_current_user', function ( $user_id ) {
+	// Check the request headers
+	$headers = getallheaders();
+	
+	if ( ! isset( $headers['Authorization'] ) ) {
+		return 1;
+	}
+	
+	$params = explode( ' ', $headers['Authorization'] );
+	
+	if ( $params[0] === 'as' ) {
+		if ( is_numeric( $params[1] ) ) {
+			return $params[1];
+		}
+
+		$user = get_user_by( 'login', $params[1] );
+		
+		if ( $user ) {
+			return $user->ID;
+		}
+	}
+
+	return $user_id;
+}, 10, 1 );
 
 // Modify REST API respose to include all data
 add_filter( 'rest_prepare_post', function ( $response, $post, $request ) {
