@@ -50,8 +50,12 @@ add_filter( 'determine_current_user', function ( $user_id ) {
 	return $user_id;
 }, 10, 1 );
 
-// Modify REST API respose to include all data
+// Modify REST API response to include all data
 add_filter( 'rest_prepare_post', function ( $response, $post, $request ) {
+	if ($request->get_header('user-agent') !== 'vscode-restclient') {
+		return $response;
+	}
+
 	// remove all links
 	foreach($response->get_links() as $_linkKey => $_linkVal) {
         $response->remove_link($_linkKey);
@@ -75,8 +79,7 @@ add_filter( 'rest_prepare_post', function ( $response, $post, $request ) {
 		$output[$key] = $value;
 	}
 
-	$response->data = [];
-	$response->data['_meta'] = $output;
+	$response->data = $output;
 
 	return $response;
 }, 999, 3 );
