@@ -8,10 +8,6 @@ Version: 0.0.0-alpha
 Author URI: https://tan.ng/
 */
 
-if ( ! defined( 'WP_ENVIRONMENT_TYPE' ) || WP_ENVIRONMENT_TYPE !== 'development' ) {
-	return;
-}
-
 // Functions for debugging
 function ddd( $object ) {
 	echo '<pre>';
@@ -56,19 +52,31 @@ add_filter( 'determine_current_user', function ( $user_id ) {
 
 // Modify REST API respose to include all data
 add_filter( 'rest_prepare_post', function ( $response, $post, $request ) {
+	// remove all links
+	foreach($response->get_links() as $_linkKey => $_linkVal) {
+        $response->remove_link($_linkKey);
+    }
+
 	// Include all meta data
 	$meta = get_post_meta( $post->ID );
 
+	$skip = ['_edit_lock', '_edit_last', '_wp_old_slug', '_wp_page_template', '_wp_trash_meta_status'];
 	// Loop through all meta data and unserialize the value
+	$output = [];
 	foreach ( $meta as $key => $value ) {
+		if ( in_array( $key, $skip ) ) {
+			continue;
+		}
+
 		foreach ( $value as $index => $val ) {
 			$value[$index] = maybe_unserialize( $val );
 		}
 
-		$meta[$key] = $value;
+		$output[$key] = $value;
 	}
 
-	$response->data['_meta'] = $meta;
+	$response->data = [];
+	$response->data['_meta'] = $output;
 
 	return $response;
-}, 10, 3 );
+}, 999, 3 );
