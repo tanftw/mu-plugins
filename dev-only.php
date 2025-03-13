@@ -24,6 +24,14 @@ function clv( $object ) {
 	error_log( var_export( $object, true ) );
 }
 
+add_filter('script_loader_src', function($src) {
+    return remove_query_arg('ver', $src);
+}, 10, 1);
+
+add_filter('style_loader_src', function($src) {
+    return remove_query_arg('ver', $src);
+}, 10, 1);
+
 // Always login REST API as admin
 add_filter( 'determine_current_user', function ( $user_id ) {
 	// Check the request headers
